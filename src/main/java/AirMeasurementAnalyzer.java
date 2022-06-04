@@ -19,7 +19,7 @@ public class AirMeasurementAnalyzer {
 
     public Map<String, Double> getAverageMeasurementsByLocation(Predicate<AirMeasurement> p, Function<AirMeasurement, Double> f){
         Map<String, Double> a = measurements.stream()
-                //.filter(AirMeasurement::hasValue)
+                .filter(AirMeasurement::hasValue)
                 .filter(p)
                 .collect(groupingBy(AirMeasurement::getLocationAndParameter, averagingDouble(AirMeasurement::getValue)));
 
