@@ -1,39 +1,29 @@
-import model.AirMeasurement;
-import model.CSVParser;
-import java.io.IOException;
+import model.CSVDownloader;
+import model.CSVLoader;
+import model.Measurement;
 
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
 
 public class Application {
 
-    public static final String airQuality = "src/main/resources/Swiss_Air_Quality_2021.csv";
-    public static final String airMeteo = "src/main/resources/Swiss_Meteo_2021.csv";
+    public static void main(String args[]){
 
-    public static void main(String args[]) throws IOException{
+        CSVDownloader downloader = new CSVDownloader("src/main/resources/");
 
-        //ArrayList<AirMeasurement> qualityMeasurements = CSVParser.parse(airQuality);
-        ArrayList<AirMeasurement> meteoMeasurements = CSVParser.parse(airMeteo);
+        downloader.downloadData(
+                "https://data.stadt-zuerich.ch/dataset/ugz_luftschadstoffmessung_tageswerte/download/ugz_ogd_air_d1_",
+                "air",
+                1983,
+                2022);
 
-        //System.out.println("Length of quality: " + qualityMeasurements.size());
-        System.out.println("Lenght of meteo: " + meteoMeasurements.size());
+        downloader.downloadData(
+                "https://data.stadt-zuerich.ch/dataset/ugz_meteodaten_stundenmittelwerte/download/ugz_ogd_meteo_h1_",
+                "meteo",
+                1992,
+                2022);
 
-        //qualityMeasurements.addAll(meteoMeasurements);
-        AirMeasurementAnalyzer ama = new AirMeasurementAnalyzer(meteoMeasurements);
-//        Map<String, Double> locMeasure = ama.getAverageMeasurementsByLocation(AirMeasurement::hasValue,AirMeasurement::getValue);
-//
-//        for(String key: locMeasure.keySet()){
-//            System.out.println(key + ": " +locMeasure.get(key));
-//        }
-//
-
-        Map<String, Double> locMeasure = ama.getAverageMeasurementByLocationAndFeature (
-                x -> x.getLocation().equals("Zch_Rosengartenstrasse"),
-                x -> x.getParameter().equals("T")
-        );
-        for(String key: locMeasure.keySet()){
-            System.out.println(key + ": " +locMeasure.get(key));
-        }
+        List<Measurement> measurements = CSVLoader.loadMeasurements("air", "src/main/resources/");
 
     }
 }

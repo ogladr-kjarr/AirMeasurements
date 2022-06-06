@@ -1,38 +1,41 @@
-import model.AirMeasurement;
+import model.Measurement;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 
 import static java.util.stream.Collectors.*;
 
 public class AirMeasurementAnalyzer {
 
-    private final ArrayList<AirMeasurement> measurements;
+    private final ArrayList<Measurement> measurements;
 
-    public AirMeasurementAnalyzer(ArrayList<AirMeasurement> measurements){
+    public AirMeasurementAnalyzer(ArrayList<Measurement> measurements){
 
         this.measurements = measurements;
     }
 
-    public Map<String, Double> getAverageMeasurementsByLocation(Predicate<AirMeasurement> p, Function<AirMeasurement, Double> f){
-        Map<String, Double> a = measurements.stream()
-                .filter(AirMeasurement::hasValue)
-                .filter(p)
-                .collect(groupingBy(AirMeasurement::getLocationAndParameter, averagingDouble(AirMeasurement::getValue)));
-
-        return a;
-    }
-
-    public Map<String, Double> getAverageMeasurementByLocationAndFeature(Predicate<AirMeasurement> locationFilter, Predicate<AirMeasurement> featureFilter){
+    public Map<String, Double> getAverageByLocationAndParameter(){
         Map<String, Double> averages = measurements.stream()
-                .filter(AirMeasurement::hasValue)
-                .filter(locationFilter)
-                .filter(featureFilter)
-                .collect(groupingBy(AirMeasurement::getLocation, averagingDouble(AirMeasurement::getValue)));
+                .collect(groupingBy(measurement -> measurement.location() + ":" + measurement.parameter(),
+                        averagingDouble(measurement -> measurement.value().orElse(0.0))));
 
         return averages;
     }
+
+    public Map<String, Double> searchAverageByLocationAndParameter(String location, String parameter){
+        return getSubsetByLocationAndParameter(location, parameter).stream()
+                .collect(groupingBy(measurement -> measurement.location() + ":" + measurement.parameter(),
+                        averagingDouble(measurement -> measurement.value().orElse(0.0))));
+    }
+
+    public List<Measurement> getSubsetByLocationAndParameter(String location, String parameter){
+        return measurements.stream()
+                .filter(measurement -> measurement.location().equals(location))
+                .filter(measurement -> measurement.parameter().equals(parameter))
+                .collect(toList());
+    }
+
+
 }
