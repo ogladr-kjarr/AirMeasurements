@@ -21,24 +21,24 @@ import org.apache.logging.log4j.core.config.Configurator;
 public class CSVLoader{
 
     private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'kk:mmZ");
-    private static final Logger logger = LogManager.getLogger(CSVLoader.class.getName());
+    private static final Logger logger = LogManager.getLogger();
 
     public static List<Measurement> loadMeasurements(String recordType, String downloadLocation){
-        Configurator.setLevel(logger.getName(), Level.DEBUG);
 
-        //Get list of files i.e. have air or meteo in name
+        logger.atDebug().log("Beginning to load measurements of type: " + recordType + ", from location: " + downloadLocation);
         return Stream.of(new File(downloadLocation).listFiles())
                 .filter(file -> !file.isDirectory())
                 .map(File::getAbsolutePath)
                 .filter(filename -> filename.contains(recordType))
                 .flatMap(CSVLoader::loadMeasurementsFromFile)
+                .filter(measurement -> measurement.value().isPresent())
                 .collect(Collectors.toList());
     }
 
     public static Stream<Measurement> loadMeasurementsFromFile(String filepath) {
 
         try{
-            logger.atDebug().log("At file: " + filepath);
+            logger.atDebug().log("Attempting to load measurements from file: " + filepath);
             final Path dataPath = Paths.get(filepath);
             final List<String> lines = Files.readAllLines(dataPath);
             return parseFileContents(lines).stream();
@@ -52,6 +52,7 @@ public class CSVLoader{
 
         ArrayList<Measurement> airMeasurements = new ArrayList<>();
 
+        logger.atDebug().log("Iterating over file contents. " + (lines.size() - 1) + " measurements to load");
         // Start at 1, as line 0 is the header text
         for(int i = 1; i < lines.size(); i++){
             airMeasurements.add(CSVLoader.parseMeasurement(lines.get(i)));

@@ -16,22 +16,21 @@ import org.apache.logging.log4j.core.config.Configurator;
 
 public class CSVDownloader {
 
-    public final String downloadLocation;
-    private static final Logger logger = LogManager.getLogger(CSVDownloader.class.getName());
+    private final String downloadLocation;
+    private static final Logger logger = LogManager.getLogger();
 
     public CSVDownloader(String downloadLocation){
         this.downloadLocation = downloadLocation;
-
-        Configurator.setLevel(logger.getName(), Level.DEBUG);
+        logger.atTrace().log("Initialized CSVDownloader");
     }
 
     public void downloadData(String url, String recordType, int startYear, int endYear) {
 
         int currentYear = startYear;
+        logger.atDebug().log("Starting downloads for record type: " + recordType + ", starting from: " + startYear + ", to end year: " + endYear);
 
         while (currentYear <= endYear) {
 
-            logger.atDebug().log("Current year: " + currentYear + ", End year: " + endYear);
             String downloadToFileName = downloadLocation + recordType + "_" + currentYear + ".csv";
 
             if (fileDoesntExist(downloadToFileName)) {
@@ -50,12 +49,14 @@ public class CSVDownloader {
     }
 
     private boolean fileDoesntExist(String downloadToFileName){
+        logger.atDebug().log("Checking file " + downloadToFileName + " exists");
         Path path = Paths.get(downloadToFileName);
         return !Files.exists(path);
     }
 
     private void downloadIndividualFile(URL sourceURL, String recordType, String downloadToFileName, int currentYear){
 
+        logger.atDebug().log("Attempting to download file " + downloadToFileName);
         try (ReadableByteChannel source = Channels.newChannel(sourceURL.openStream());
              FileOutputStream target = new FileOutputStream(new File(downloadToFileName))) {
             target.getChannel().transferFrom(source, 0, Long.MAX_VALUE);
