@@ -33,15 +33,19 @@ public class Application {
                     2022);
 
             List<Measurement> measurements = CSVLoader.loadMeasurements("air", "src/main/resources/");
-        } else if (args[0].equals("read-from-db")) {
-            List<Measurement> measurements = CSVLoader.loadMeasurements("air", "src/main/resources/");
+        } else if (args[0].equals("write-to-db")) {
+            List<Measurement> measurements = CSVLoader.loadMeasurements("meteo", "src/main/resources/");
 
             PostgreSQLAccess pgAccess = new PostgreSQLAccess(
                     "127.0.0.1", "5432", "measurements", "postgres", "testingjava");
 
             boolean insertOK = pgAccess.saveMeasurements(measurements);
+        } else if(args[0].equals("read-from-db")){
+            PostgreSQLAccess pgAccess = new PostgreSQLAccess(
+                    "127.0.0.1", "5432", "measurements", "postgres", "testingjava");
+            //List<Measurement> measurements = pgAccess.retrieveMeasurementSubset(2022, 2022);
+            List<Measurement> measurements = pgAccess.retrieveMeasurements();
+            logger.atDebug().log("Length of measurements: %s ".formatted(measurements.size()));
         }
-
-
     }
 }

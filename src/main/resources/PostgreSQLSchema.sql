@@ -1,7 +1,7 @@
 createdb measurements;
 
 create table measurements(
-mdate date,
+mdate timestamp with time zone,
 location varchar,
 parameter varchar,
 interval varchar,

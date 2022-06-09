@@ -4,8 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class PostgreSQLAccess implements MeasurementAccess {
 
@@ -59,7 +61,7 @@ public class PostgreSQLAccess implements MeasurementAccess {
             logger.atError().log(e);
         }
 
-        return checkResultSet(insertStatementResult);
+        return checkInsertResultSet(insertStatementResult);
     }
 
     /*
@@ -67,7 +69,7 @@ public class PostgreSQLAccess implements MeasurementAccess {
     in that position in the statement. If the statement was successful then its index holds a 1 value. Here we check
     that the number of entries matches the number of successes.
      */
-    private boolean checkResultSet(int[] results){
+    private boolean checkInsertResultSet(int[] results){
         int resultTally = 0;
         for(int i = 0; i < results.length; i++){
             resultTally += results[i];
@@ -82,21 +84,42 @@ public class PostgreSQLAccess implements MeasurementAccess {
     }
     @Override
     public ArrayList<Measurement> retrieveMeasurements() {
-//
-//        Statement st = conn.createStatement();
-//        ResultSet rs = st.executeQuery("SELECT testcol1 FROM test");
-//        while (rs.next())
-//        {
-//            System.out.print("Column returned: ");
-//            System.out.println(rs.getString(1));
-//        }
-//        rs.close();
-//        st.close();
-return null;
+        return queryDatabase("SELECT * FROM measurements ORDER BY mdate ASC");
     }
 
     @Override
     public ArrayList<Measurement> retrieveMeasurementSubset(int startYear, int endYear) {
-        return null;
+        logger.atDebug().log("Submitting query to retrieval method");
+        return queryDatabase("SELECT * FROM measurements WHERE mdate >= '%s/01/01T00:00' AND mdate <= '%s/12/31T23:59' ORDER BY mdate ASC".formatted(startYear, endYear));
+    }
+
+    private ArrayList<Measurement> queryDatabase(String queryString) {
+        ArrayList<Measurement> queryResult = new ArrayList<>();
+        logger.atDebug().log("Opening connection, statement, and result set");
+        try (Connection conn = DriverManager.getConnection(connectionURL);
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(queryString)) {
+            logger.atDebug().log("Iterating over result set");
+                while(rs.next()){
+                    Measurement measurement = new Measurement(
+                            rs.getObject("mdate", OffsetDateTime.class),
+                            rs.getString("location"),
+                            rs.getString("parameter"),
+                            rs.getString("interval"),
+                            rs.getString("unit"),
+                            Optional.of(rs.getDouble("value")),
+                            rs.getString("status")
+                    );
+
+                    queryResult.add(measurement);
+
+                }
+
+        } catch (java.sql.SQLException e) {
+            logger.atError().log("Query database attempt failed for query: " + queryString);
+            logger.atError().log(e);
+        }
+
+        return queryResult;
     }
 }

@@ -1,9 +1,9 @@
 package model;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
-    public record Measurement(LocalDate date,
+    public record Measurement(OffsetDateTime date,
                               String location,
                               String parameter,
                               String interval,

@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +65,7 @@ public class CSVLoader{
         final String[] columns = line.split(",");
 
         //The date field has a prefix unicode value in front of the opening quotation
-        final LocalDate recordDate = LocalDate.parse(columns[0].substring(1).replace("\"",""), DATE_PATTERN);
+        final OffsetDateTime date = OffsetDateTime.parse(columns[0].substring(1).replace("\"",""), DATE_PATTERN);
         final String location = columns[1].replace("\"","");
         final String parameter = columns[2].replace("\"","");
         final String interval = columns[3].replace("\"","");
@@ -79,6 +79,6 @@ public class CSVLoader{
 
         final String status = columns[6].replace("\"","");
 
-        return new Measurement(recordDate, location, parameter, interval, unit, value, status);
+        return new Measurement(date, location, parameter, interval, unit, value, status);
     }
 }
