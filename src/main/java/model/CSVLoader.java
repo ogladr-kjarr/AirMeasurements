@@ -13,23 +13,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.config.Configurator;
 
 public class CSVLoader{
 
     private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'kk:mmZ");
     private static final Logger logger = LogManager.getLogger();
 
-    public static List<Measurement> loadMeasurements(String recordType, String downloadLocation){
+    public static List<Measurement> loadMeasurements(String downloadLocation){
 
-        logger.atDebug().log("Beginning to load measurements of type: " + recordType + ", from location: " + downloadLocation);
+        logger.atDebug().log("Beginning to load measurements from location: " + downloadLocation);
         return Stream.of(new File(downloadLocation).listFiles())
                 .filter(file -> !file.isDirectory())
                 .map(File::getAbsolutePath)
-                .filter(filename -> filename.contains(recordType))
+                .filter(name -> name.contains("csv"))
                 .flatMap(CSVLoader::loadMeasurementsFromFile)
                 .filter(measurement -> measurement.value().isPresent())
                 .collect(Collectors.toList());

@@ -2,6 +2,7 @@ package model;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -24,7 +25,7 @@ public class CSVDownloader {
         logger.atTrace().log("Initialized CSVDownloader");
     }
 
-    public void downloadData(String url, String recordType, int startYear, int endYear) {
+    public void downloadData(String url, String recordType, int startYear, int endYear) throws DownloadException{
 
         int currentYear = startYear;
         logger.atDebug().log("Starting downloads for record type: " + recordType + ", starting from: " + startYear + ", to end year: " + endYear);
@@ -40,6 +41,7 @@ public class CSVDownloader {
 
                } catch (java.net.MalformedURLException e) {
                     logger.atError().log("Malformed URL Exception while creating URL for web-based data source");
+                    throw new DownloadException("Download of %s failed, downloading of subsequent files cancelled".formatted(downloadToFileName), e);
                 }
             }else{
                 logger.atDebug().log("File " + downloadToFileName + " already exists.");
@@ -54,7 +56,7 @@ public class CSVDownloader {
         return !Files.exists(path);
     }
 
-    private void downloadIndividualFile(URL sourceURL, String recordType, String downloadToFileName, int currentYear){
+    private void downloadIndividualFile(URL sourceURL, String recordType, String downloadToFileName, int currentYear) throws DownloadException{
 
         logger.atDebug().log("Attempting to download file " + downloadToFileName);
         try (ReadableByteChannel source = Channels.newChannel(sourceURL.openStream());
@@ -63,6 +65,7 @@ public class CSVDownloader {
             logger.atDebug().log("Finished downloading " + recordType + " measurements for year: " + currentYear + ".");
         } catch (java.io.IOException e) {
             logger.atError().log("IO Exception while opening URL Stream or File Output Stream");
+            throw new DownloadException("Download of %s failed, downloading subsequent files cancelled".formatted(downloadToFileName), e);
         }
     }
 }

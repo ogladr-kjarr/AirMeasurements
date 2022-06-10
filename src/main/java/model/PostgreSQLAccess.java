@@ -36,6 +36,7 @@ public class PostgreSQLAccess implements MeasurementAccess {
                 """;
         logger.atDebug().log("Creating connection and prepared statement for insert into PostgreSQL. Consists of " + measurements.size() + " measurements");
         int[] insertStatementResult = new int[1];
+        insertStatementResult[0] = 0;
 
         try(Connection conn = DriverManager.getConnection(connectionURL);
             PreparedStatement measurementStatement = conn.prepareStatement(preparedSQLStatement)){
@@ -56,6 +57,8 @@ public class PostgreSQLAccess implements MeasurementAccess {
             logger.atDebug().log("Finished executing batch insert statement");
 
 
+        }catch(java.sql.BatchUpdateException e){
+            logger.atError().log("SQL Exception while submitting batch query");
         }catch(java.sql.SQLException e){
             logger.atError().log("SQL Exception while attempting to create connection to PostgreSQL for saveMeasurements");
             logger.atError().log(e);
@@ -84,6 +87,7 @@ public class PostgreSQLAccess implements MeasurementAccess {
     }
     @Override
     public ArrayList<Measurement> retrieveMeasurements() {
+        logger.atDebug().log("Submitting query to retrieval method");
         return queryDatabase("SELECT * FROM measurements ORDER BY mdate ASC");
     }
 
@@ -118,6 +122,8 @@ public class PostgreSQLAccess implements MeasurementAccess {
         } catch (java.sql.SQLException e) {
             logger.atError().log("Query database attempt failed for query: " + queryString);
             logger.atError().log(e);
+            //Clear to avoid semi-filled result set
+            queryResult.clear();
         }
 
         return queryResult;
