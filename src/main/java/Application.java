@@ -1,9 +1,14 @@
 import model.*;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 public class Application {
 
@@ -32,6 +37,7 @@ public class Application {
                     showStatistics();
                     break;
                 case 'm':
+                    sendToQueue();
                     break;
                 case 'e':
                     exit = true;
@@ -85,5 +91,29 @@ public class Application {
         logger.atDebug().log("Finished loading and initialized the analyzer");
         analyzer.showSummary();
 
+    }
+
+    private static void sendToQueue(){
+        logger.atDebug().log("Starting to load measurments from database");
+        MeasurementAccess databaseAccess = new PostgreSQLAccess("127.0.0.1", "5432", "measurements", "postgres", "testingjava");
+        ArrayList<Measurement> measurements = databaseAccess.retrieveMeasurements();
+        logger.atDebug().log("Finished loading measurements from database");
+
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("linger.ms", 1);
+        props.put("request.timeout.ms", 500);
+        props.put("delivery.timeout.ms", 1000);
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        logger.atDebug().log("Creating Kafka producer");
+        try(Producer<String, String> producer = new KafkaProducer<>(props)){
+            logger.atDebug().log("Starting to send to Kafka");
+            for (Measurement m: measurements){
+                producer.send(new ProducerRecord<String, String>("measurements", m.toString()));
+            }
+            logger.atDebug().log("Finished sending to Kafka");
+        }
     }
 }
