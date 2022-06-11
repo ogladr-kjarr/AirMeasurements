@@ -1,6 +1,8 @@
 # Air Measurements
 
-This repo is a very basic use of Java to learn how to model objects as classes, create interfaces, use lambdas and method references, use JUnit, and to work with databases for storing and retrieving data.
+This repo is a very basic use of Java to learn how to model objects as 
+classes and records, create interfaces, use lambdas, download 
+data and to work with databases for storing and retrieving data.
 
 # Data
 
