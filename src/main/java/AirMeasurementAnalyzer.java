@@ -35,6 +35,7 @@ public class AirMeasurementAnalyzer {
 
     public Map<String, Double> getAverageTemperatureByMonth(){
         return measurements.stream()
+                .filter(measurement -> measurement.parameter().equals("T"))
                 .collect(groupingBy(measurement -> measurement.date().getYear() + ":" + measurement.date().getMonth(),
                         averagingDouble(measurement -> measurement.value().orElse(0.0))));
     }
