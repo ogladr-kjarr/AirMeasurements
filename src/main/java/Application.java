@@ -1,3 +1,6 @@
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import model.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -93,7 +96,7 @@ public class Application {
 
     }
 
-    private static void sendToQueue(){
+    private static void sendToQueue()  {
         logger.atDebug().log("Starting to load measurments from database");
         MeasurementAccess databaseAccess = new PostgreSQLAccess("127.0.0.1", "5432", "measurements", "postgres", "testingjava");
         ArrayList<Measurement> measurements = databaseAccess.retrieveMeasurements();
@@ -108,12 +111,17 @@ public class Application {
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
         logger.atDebug().log("Creating Kafka producer");
+        ObjectMapper jsonMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
         try(Producer<String, String> producer = new KafkaProducer<>(props)){
             logger.atDebug().log("Starting to send to Kafka");
             for (Measurement m: measurements){
-                producer.send(new ProducerRecord<String, String>("measurements", m.toString()));
+                producer.send(new ProducerRecord<String, String>("measurements", jsonMapper.writeValueAsString(m)));
             }
             logger.atDebug().log("Finished sending to Kafka");
+        }catch(JsonProcessingException e){
+            logger.atError().log("Problem serializing Measurement reference");
+            logger.atError().log(e);
         }
     }
 }
