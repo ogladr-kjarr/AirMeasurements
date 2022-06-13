@@ -88,7 +88,7 @@ public class PostgreSQLAccess implements MeasurementAccess {
     @Override
     public ArrayList<Measurement> retrieveMeasurements() {
         logger.atDebug().log("Submitting query to retrieval method");
-        return queryDatabase("SELECT * FROM measurements ORDER BY mdate ASC limit 10");
+        return queryDatabase("SELECT * FROM measurements ORDER BY mdate ASC");
     }
 
     @Override
