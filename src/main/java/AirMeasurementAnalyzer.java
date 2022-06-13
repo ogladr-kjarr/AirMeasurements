@@ -37,13 +37,13 @@ public class AirMeasurementAnalyzer {
         return measurements.stream()
                 .filter(measurement -> measurement.parameter().equals("T"))
                 .collect(groupingBy(measurement -> measurement.date().getYear() + ":" + measurement.date().getMonth(),
-                        averagingDouble(measurement -> measurement.value().orElse(0.0))));
+                        averagingDouble(measurement -> measurement.value())));
     }
 
     public Map<String, Double> getAverageByLocationAndParameter() {
         return measurements.stream()
                 .collect(groupingBy(measurement -> measurement.location() + ":" + measurement.parameter(),
-                        averagingDouble(measurement -> measurement.value().orElse(0.0))));
+                        averagingDouble(measurement -> measurement.value())));
 
     }
 }

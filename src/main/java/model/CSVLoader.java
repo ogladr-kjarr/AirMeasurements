@@ -29,7 +29,6 @@ public class CSVLoader{
                 .map(File::getAbsolutePath)
                 .filter(name -> name.contains("csv"))
                 .flatMap(CSVLoader::loadMeasurementsFromFile)
-                .filter(measurement -> measurement.value().isPresent())
                 .collect(Collectors.toList());
     }
 
@@ -53,14 +52,19 @@ public class CSVLoader{
         logger.atDebug().log("Iterating over file contents. " + (lines.size() - 1) + " measurements to load");
         // Start at 1, as line 0 is the header text
         for(int i = 1; i < lines.size(); i++){
-            airMeasurements.add(CSVLoader.parseMeasurement(lines.get(i)));
+            Optional<Measurement> m = CSVLoader.parseMeasurement(lines.get(i));
+            if (m.isPresent()){
+                airMeasurements.add(m.get());
+            }
+
         }
         return airMeasurements;
     }
 
-    private static Measurement parseMeasurement(String line){
+    private static Optional<Measurement> parseMeasurement(String line){
 
         final String[] columns = line.split(",");
+        Optional<Measurement> returnMeasurement = Optional.empty();
 
         //The date field has a prefix unicode value in front of the opening quotation
         final OffsetDateTime date = OffsetDateTime.parse(columns[0].substring(1).replace("\"",""), DATE_PATTERN);
@@ -77,6 +81,11 @@ public class CSVLoader{
 
         final String status = columns[6].replace("\"","");
 
-        return new Measurement(date, location, parameter, interval, unit, value, status);
+        if(value.isPresent()){
+            returnMeasurement = Optional.of(new Measurement(date, location, parameter, interval, unit, value.get(), status));
+        }
+
+        return returnMeasurement;
+
     }
 }

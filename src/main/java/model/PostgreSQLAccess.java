@@ -48,7 +48,7 @@ public class PostgreSQLAccess implements MeasurementAccess {
                 measurementStatement.setString(3, measurement.parameter());
                 measurementStatement.setString(4, measurement.interval());
                 measurementStatement.setString(5, measurement.unit());
-                measurementStatement.setDouble(6, measurement.value().get());
+                measurementStatement.setDouble(6, measurement.value());
                 measurementStatement.setString(7, measurement.status());
                 measurementStatement.addBatch();
             }
@@ -88,7 +88,7 @@ public class PostgreSQLAccess implements MeasurementAccess {
     @Override
     public ArrayList<Measurement> retrieveMeasurements() {
         logger.atDebug().log("Submitting query to retrieval method");
-        return queryDatabase("SELECT * FROM measurements ORDER BY mdate ASC");
+        return queryDatabase("SELECT * FROM measurements ORDER BY mdate ASC limit 10");
     }
 
     @Override
@@ -111,7 +111,7 @@ public class PostgreSQLAccess implements MeasurementAccess {
                             rs.getString("parameter"),
                             rs.getString("interval"),
                             rs.getString("unit"),
-                            Optional.of(rs.getDouble("value")),
+                            rs.getDouble("value"),
                             rs.getString("status")
                     );
 
