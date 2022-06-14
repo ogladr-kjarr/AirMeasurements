@@ -116,7 +116,7 @@ public class Application {
         try(Producer<String, String> producer = new KafkaProducer<>(props)){
             logger.atDebug().log("Starting to send to Kafka");
             for (Measurement m: measurements){
-                producer.send(new ProducerRecord<String, String>("measurements", jsonMapper.writeValueAsString(m)));
+                producer.send(new ProducerRecord<String, String>("measurements", m.location(), jsonMapper.writeValueAsString(m)));
             }
             logger.atDebug().log("Finished sending to Kafka");
         }catch(JsonProcessingException e){
