@@ -8,6 +8,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -74,34 +75,34 @@ public class Application {
             MeasurementAccess databaseAccess = new PostgreSQLAccess("127.0.0.1", "5432", "measurements", "postgres", "testingjava");
             boolean saveResult = databaseAccess.saveMeasurements(measurements);
             if(saveResult){
-                System.out.println("Data has been saved to the database successfully");
+                logger.atDebug().log("Data has been saved to the database successfully");
             }else{
-                System.out.println("Data has failed to save to the database");
+                logger.atDebug().log("Data has failed to save to the database");
             }
         } catch (DownloadException e){
             logger.atError().log("Error when trying to download files from main application");
             logger.atError().log(e);
-            System.out.println("Download was not successful");
         }
 
     }
 
-    private static void showStatistics(){
+    private static ArrayList<Measurement> loadDataFromDB(){
         logger.atDebug().log("Starting to load measurments from database");
         MeasurementAccess databaseAccess = new PostgreSQLAccess("127.0.0.1", "5432", "measurements", "postgres", "testingjava");
         ArrayList<Measurement> measurements = databaseAccess.retrieveMeasurements();
+        logger.atDebug().log("Finished loading measurements from database");
+        return measurements;
+    }
+
+    private static void showStatistics(){
+        ArrayList<Measurement> measurements = loadDataFromDB();
         AirMeasurementAnalyzer analyzer = new AirMeasurementAnalyzer(measurements);
         logger.atDebug().log("Finished loading and initialized the analyzer");
         analyzer.showSummary();
 
     }
 
-    private static void sendToQueue()  {
-        logger.atDebug().log("Starting to load measurments from database");
-        MeasurementAccess databaseAccess = new PostgreSQLAccess("127.0.0.1", "5432", "measurements", "postgres", "testingjava");
-        ArrayList<Measurement> measurements = databaseAccess.retrieveMeasurements();
-        logger.atDebug().log("Finished loading measurements from database");
-
+    private static Properties getKafkaProperties(){
         Properties props = new Properties();
         props.put("bootstrap.servers", "localhost:9092");
         props.put("linger.ms", 1);
@@ -109,6 +110,12 @@ public class Application {
         props.put("delivery.timeout.ms", 1000);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        return props;
+    }
+    private static void sendToQueue()  {
+
+        ArrayList<Measurement> measurements = loadDataFromDB();
+        Properties props = getKafkaProperties();
 
         logger.atDebug().log("Creating Kafka producer");
         ObjectMapper jsonMapper = new ObjectMapper().registerModule(new JavaTimeModule());
